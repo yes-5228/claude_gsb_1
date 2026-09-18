@@ -137,6 +137,12 @@ export default function IssueDetailPage() {
                     label: '关联巡查记录',
                     value: issue.inspection_id ? `#${issue.inspection_id}` : '无',
                   },
+                  {
+                    label: '关联无障碍检查',
+                    value: issue.accessibility_inspection_id
+                      ? `#${issue.accessibility_inspection_id}`
+                      : '无',
+                  },
                   { label: '闭环时间', value: formatDateTime(issue.closed_at) },
                   { label: '问题描述', value: issue.description || '无' },
                 ]}

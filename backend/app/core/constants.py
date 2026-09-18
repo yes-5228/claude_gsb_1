@@ -32,6 +32,7 @@ class IssueCategory(StrEnum):
     ODOR = "异味扰民"
     CONSUMABLE = "耗材缺失"
     SAFETY = "安全隐患"
+    ACCESSIBILITY = "无障碍设施"
     OTHER = "其他"
 
 
@@ -97,3 +98,55 @@ OPEN_ISSUE_STATUSES: list[str] = [
 
 # 单检查项低于该分数视为不合格项
 INSPECTION_ITEM_PROBLEM_THRESHOLD = 6
+
+
+class AccessibilityConformity(StrEnum):
+    """无障碍设施单项/总体符合性判定。"""
+
+    COMPLIANT = "符合"
+    PARTIAL = "部分符合"
+    NON_COMPLIANT = "不符合"
+
+
+class AccessibilityCondition(StrEnum):
+    """设施完好状态。"""
+
+    GOOD = "完好"
+    MINOR_DAMAGE = "轻微破损"
+    SEVERE_DAMAGE = "严重损坏"
+
+
+# 无障碍专项检查项：key 为稳定标识，standard 为判定依据的检查标准
+ACCESSIBILITY_CHECK_ITEMS: list[dict[str, str]] = [
+    {
+        "key": "handrail",
+        "name": "无障碍扶手",
+        "standard": "坐便器两侧及洗手台应设置安全抓杆，安装牢固、高度适宜，无松动、锈蚀、缺失",
+    },
+    {
+        "key": "ramp",
+        "name": "无障碍坡道",
+        "standard": "出入口应设置无障碍坡道，坡度不应大于 1:12，坡面平整防滑，两侧宜设扶手",
+    },
+    {
+        "key": "tactile_path",
+        "name": "盲道",
+        "standard": "入口及周边盲道应连续贯通，无断头、无占用，砖体无破损、缺失",
+    },
+    {
+        "key": "accessible_stall",
+        "name": "无障碍专用间",
+        "standard": "应设置无障碍专用厕位（间），门扇向外开启，内部回转空间充足，呼叫装置可用，标识清晰",
+    },
+]
+
+ACCESSIBILITY_ITEM_MAP: dict[str, dict[str, str]] = {
+    item["key"]: item for item in ACCESSIBILITY_CHECK_ITEMS
+}
+
+# 单项判定权重：符合计 1、部分符合计 0.5、不符合计 0，用于折算达标率
+ACCESSIBILITY_CONFORMITY_WEIGHT: dict[str, float] = {
+    AccessibilityConformity.COMPLIANT.value: 1.0,
+    AccessibilityConformity.PARTIAL.value: 0.5,
+    AccessibilityConformity.NON_COMPLIANT.value: 0.0,
+}

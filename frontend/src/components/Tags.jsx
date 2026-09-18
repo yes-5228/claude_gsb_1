@@ -28,3 +28,12 @@ export function GradeTag({ grade }) {
           : 'tag-danger';
   return <span className={`tag ${tone}`}>{grade || '未评级'}</span>;
 }
+
+export function ConformityTag({ conformity }) {
+  return <span className={`tag ${statusTone(conformity)}`}>{conformity || '未检查'}</span>;
+}
+
+export function RatePill({ rate }) {
+  if (rate === null || rate === undefined) return <span className="muted">-</span>;
+  return <span className={`score-pill ${scoreTone(rate)}`}>{Number(rate).toFixed(1)}%</span>;
+}

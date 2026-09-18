@@ -1,5 +1,13 @@
 """Pydantic 数据模型。"""
 
+from app.schemas.accessibility import (
+    AccessibilityInspectionCreate,
+    AccessibilityInspectionOut,
+    AccessibilityInspectionUpdate,
+    AccessibilityItemIn,
+    AccessibilityItemOut,
+    AccessibilitySummary,
+)
 from app.schemas.common import Page, PageMeta, MessageOut
 from app.schemas.inspection import (
     InspectionBrief,
@@ -44,4 +52,10 @@ __all__ = [
     "IssueStatusUpdate",
     "IssueOut",
     "DashboardStats",
+    "AccessibilityItemIn",
+    "AccessibilityItemOut",
+    "AccessibilityInspectionCreate",
+    "AccessibilityInspectionUpdate",
+    "AccessibilityInspectionOut",
+    "AccessibilitySummary",
 ]

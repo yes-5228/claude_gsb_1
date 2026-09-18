@@ -7,9 +7,12 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.constants import (
+    ACCESSIBILITY_CHECK_ITEMS,
     INSPECTION_CHECK_ITEMS,
     INSPECTION_ITEM_MAX_SCORE,
     ISSUE_TRANSITIONS,
+    AccessibilityCondition,
+    AccessibilityConformity,
     IssueCategory,
     IssueSeverity,
     IssueStatus,
@@ -30,6 +33,12 @@ class RestroomOption(BaseModel):
     district: str
 
 
+class AccessibilityCheckItem(BaseModel):
+    key: str
+    name: str
+    standard: str
+
+
 class Dictionaries(BaseModel):
     restroom_status: list[str]
     restroom_grade: list[str]
@@ -40,6 +49,9 @@ class Dictionaries(BaseModel):
     inspection_check_items: list[str]
     inspection_item_max_score: int
     issue_transitions: dict[str, list[str]]
+    accessibility_check_items: list[AccessibilityCheckItem]
+    accessibility_conditions: list[str]
+    accessibility_conformity: list[str]
 
 
 @router.get("/dictionaries", response_model=Dictionaries, summary="枚举字典")
@@ -54,6 +66,11 @@ def get_dictionaries() -> Dictionaries:
         inspection_check_items=list(INSPECTION_CHECK_ITEMS),
         inspection_item_max_score=INSPECTION_ITEM_MAX_SCORE,
         issue_transitions={key: list(value) for key, value in ISSUE_TRANSITIONS.items()},
+        accessibility_check_items=[
+            AccessibilityCheckItem(**item) for item in ACCESSIBILITY_CHECK_ITEMS
+        ],
+        accessibility_conditions=[item.value for item in AccessibilityCondition],
+        accessibility_conformity=[item.value for item in AccessibilityConformity],
     )
 
 

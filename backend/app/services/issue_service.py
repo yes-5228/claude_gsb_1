@@ -12,7 +12,7 @@ from app.core.constants import (
     IssueStatus,
 )
 from app.core.exceptions import DomainError, NotFoundError
-from app.models import Inspection, Issue, RectificationRecord, Restroom
+from app.models import AccessibilityInspection, Inspection, Issue, RectificationRecord, Restroom
 from app.schemas.issue import IssueCreate, IssueOut, IssueStatusUpdate, IssueUpdate
 from app.services import restroom_service
 
@@ -142,11 +142,22 @@ def create_issue(db: Session, payload: IssueCreate) -> Issue:
             raise NotFoundError(f"巡查记录 {payload.inspection_id} 不存在")
         if inspection.restroom_id != payload.restroom_id:
             raise DomainError("关联的巡查记录与所选公厕不一致")
+    if payload.accessibility_inspection_id is not None:
+        accessibility = db.get(AccessibilityInspection, payload.accessibility_inspection_id)
+        if accessibility is None:
+            raise NotFoundError(f"无障碍检查记录 {payload.accessibility_inspection_id} 不存在")
+        if accessibility.restroom_id != payload.restroom_id:
+            raise DomainError("关联的无障碍检查记录与所选公厕不一致")
 
-    data = _values(payload.model_dump(exclude={"inspection_id", "report_time", "initial_remark"}))
+    data = _values(
+        payload.model_dump(
+            exclude={"inspection_id", "accessibility_inspection_id", "report_time", "initial_remark"}
+        )
+    )
     issue = Issue(
         code=_next_code(db),
         inspection_id=payload.inspection_id,
+        accessibility_inspection_id=payload.accessibility_inspection_id,
         report_time=payload.report_time or datetime.now(),
         status=IssueStatus.PENDING.value,
         **data,

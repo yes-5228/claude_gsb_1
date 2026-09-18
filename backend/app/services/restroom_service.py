@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.constants import OPEN_ISSUE_STATUSES
 from app.core.exceptions import ConflictError, DomainError, NotFoundError
-from app.models import Inspection, Issue, Restroom
+from app.models import AccessibilityInspection, Inspection, Issue, Restroom
 from app.schemas.restroom import RestroomCreate, RestroomDetail, RestroomOut, RestroomUpdate
 
 SORTABLE_FIELDS = {
@@ -104,13 +104,18 @@ def delete_restroom(db: Session, restroom_id: int, *, force: bool = False) -> No
     inspection_count = db.scalar(
         select(func.count()).select_from(Inspection).where(Inspection.restroom_id == restroom_id)
     ) or 0
+    accessibility_count = db.scalar(
+        select(func.count())
+        .select_from(AccessibilityInspection)
+        .where(AccessibilityInspection.restroom_id == restroom_id)
+    ) or 0
     issue_count = db.scalar(
         select(func.count()).select_from(Issue).where(Issue.restroom_id == restroom_id)
     ) or 0
-    if (inspection_count or issue_count) and not force:
+    if (inspection_count or accessibility_count or issue_count) and not force:
         raise ConflictError(
-            f"该公厕已有 {inspection_count} 条巡查记录、{issue_count} 条问题记录，"
-            "确需删除请使用 force=true"
+            f"该公厕已有 {inspection_count} 条巡查记录、{accessibility_count} 条无障碍检查记录、"
+            f"{issue_count} 条问题记录，确需删除请使用 force=true"
         )
     db.delete(restroom)
     db.commit()

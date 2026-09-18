@@ -52,7 +52,27 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
+def _apply_lightweight_migrations() -> None:
+    """为存量 SQLite 库补充新增列（create_all 不会修改已存在的表）。"""
+    if not settings.database_url.startswith("sqlite"):
+        return
+    new_columns = {
+        "issues": ["accessibility_inspection_id"],
+    }
+    with engine.begin() as conn:
+        for table, columns in new_columns.items():
+            existing = {
+                row[1] for row in conn.exec_driver_sql(f"PRAGMA table_info({table})").fetchall()
+            }
+            if not existing:
+                continue  # 表尚未创建，交给 create_all
+            for column in columns:
+                if column not in existing:
+                    conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {column} INTEGER")
+
+
 def init_db() -> None:
     from app import models  # noqa: F401  确保模型完成注册
 
     Base.metadata.create_all(bind=engine)
+    _apply_lightweight_migrations()

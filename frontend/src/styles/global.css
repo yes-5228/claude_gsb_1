@@ -815,6 +815,127 @@ table.data-table td.wrap {
   flex: 1;
 }
 
+/* 页签 */
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-item {
+  border: none;
+  background: none;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab-item:hover {
+  color: var(--primary);
+}
+
+.tab-item.active {
+  color: var(--primary);
+  font-weight: 600;
+  border-bottom-color: var(--primary);
+}
+
+/* 无障碍设施登记卡片 */
+.facility-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 10px;
+}
+
+.facility-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--surface-alt);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.facility-card.is-fail {
+  border-color: #f5b7b7;
+  background: #fff5f5;
+}
+
+.facility-card.is-partial {
+  border-color: #f3d9a4;
+  background: #fffaf0;
+}
+
+.facility-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.facility-standard {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.facility-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.facility-row select {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--text);
+  min-width: 130px;
+}
+
+.facility-row select:disabled {
+  background: #eef2f6;
+  color: var(--text-muted);
+}
+
+.facility-remark {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 8px;
+  font-size: 12.5px;
+  font-family: inherit;
+  width: 100%;
+}
+
+.issue-link-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.issue-link-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.issue-link-row a {
+  flex: 1;
+}
+
 .muted {
   color: var(--text-muted);
 }

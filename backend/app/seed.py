@@ -7,7 +7,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.constants import (
+    ACCESSIBILITY_CHECK_ITEMS,
     INSPECTION_CHECK_ITEMS,
+    AccessibilityCondition,
     IssueCategory,
     IssueSeverity,
     IssueStatus,
@@ -16,10 +18,16 @@ from app.core.constants import (
     Shift,
 )
 from app.models import Restroom
+from app.schemas.accessibility import AccessibilityInspectionCreate, AccessibilityItemIn
 from app.schemas.inspection import InspectionCreate, InspectionItem
 from app.schemas.issue import IssueCreate, IssueStatusUpdate
 from app.schemas.restroom import RestroomCreate
-from app.services import inspection_service, issue_service, restroom_service
+from app.services import (
+    accessibility_service,
+    inspection_service,
+    issue_service,
+    restroom_service,
+)
 
 RANDOM_SEED = 20240913
 
@@ -95,6 +103,51 @@ def _pick_problem(items: list[InspectionItem]) -> str | None:
     problems = [item for item in items if item.score < 6]
     pool = problems or items
     return min(pool, key=lambda item: item.score).name
+
+
+def _build_accessibility_items(rng: random.Random, has_accessible: bool) -> list[AccessibilityItemIn]:
+    """按公厕无障碍建设水平生成设施登记明细。"""
+    items: list[AccessibilityItemIn] = []
+    for spec in ACCESSIBILITY_CHECK_ITEMS:
+        missing_chance = 0.5 if not has_accessible else 0.08
+        if rng.random() < missing_chance:
+            items.append(AccessibilityItemIn(key=spec["key"], configured=False))
+            continue
+        roll = rng.random()
+        if roll < 0.72:
+            condition = AccessibilityCondition.GOOD
+        elif roll < 0.9:
+            condition = AccessibilityCondition.MINOR_DAMAGE
+        else:
+            condition = AccessibilityCondition.SEVERE_DAMAGE
+        items.append(AccessibilityItemIn(key=spec["key"], configured=True, condition=condition))
+    return items
+
+
+def _seed_accessibility(db: Session, restrooms: list[Restroom], rng: random.Random, now: datetime) -> int:
+    """生成无障碍专项检查演示数据，不符合项会自动产生整改工单，返回检查记录数。"""
+    created = 0
+    for room in restrooms:
+        if room.status == RestroomStatus.CLOSED:
+            continue
+        for days_ago in (24, 6):
+            if rng.random() < 0.25:
+                continue
+            inspect_time = now - timedelta(days=days_ago, hours=rng.randint(0, 8))
+            inspection = accessibility_service.create_inspection(
+                db,
+                AccessibilityInspectionCreate(
+                    restroom_id=room.id,
+                    inspector=rng.choice(INSPECTORS),
+                    inspect_time=inspect_time,
+                    items=_build_accessibility_items(rng, room.has_accessible),
+                    remark=None,
+                ),
+            )
+            created += 1
+            for issue in inspection.issues:
+                _advance_issue(db, issue.id, (now - inspect_time).days, rng)
+    return created
 
 
 def seed_database(db: Session, *, reset: bool = False) -> int:
@@ -189,6 +242,8 @@ def seed_database(db: Session, *, reset: bool = False) -> int:
         )
         created += 1
         _advance_issue(db, issue.id, age_days, rng)
+
+    _seed_accessibility(db, restrooms, rng, now)
 
     return created
 
