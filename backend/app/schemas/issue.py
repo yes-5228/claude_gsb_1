@@ -66,6 +66,7 @@ class IssueOut(BaseModel):
     restroom_id: int
     restroom: RestroomBrief | None = None
     inspection_id: int | None = None
+    accessibility_check_id: int | None = None
     title: str
     description: str
     category: str

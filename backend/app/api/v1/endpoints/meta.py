@@ -7,9 +7,13 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.constants import (
+    ACCESSIBILITY_REQUIRED_FACILITIES,
     INSPECTION_CHECK_ITEMS,
     INSPECTION_ITEM_MAX_SCORE,
     ISSUE_TRANSITIONS,
+    AccessibilityCondition,
+    AccessibilityResult,
+    AccessibilityVerdict,
     IssueCategory,
     IssueSeverity,
     IssueStatus,
@@ -40,6 +44,10 @@ class Dictionaries(BaseModel):
     inspection_check_items: list[str]
     inspection_item_max_score: int
     issue_transitions: dict[str, list[str]]
+    accessibility_facilities: list[str]
+    accessibility_conditions: list[str]
+    accessibility_verdicts: list[str]
+    accessibility_results: list[str]
 
 
 @router.get("/dictionaries", response_model=Dictionaries, summary="枚举字典")
@@ -54,6 +62,10 @@ def get_dictionaries() -> Dictionaries:
         inspection_check_items=list(INSPECTION_CHECK_ITEMS),
         inspection_item_max_score=INSPECTION_ITEM_MAX_SCORE,
         issue_transitions={key: list(value) for key, value in ISSUE_TRANSITIONS.items()},
+        accessibility_facilities=list(ACCESSIBILITY_REQUIRED_FACILITIES),
+        accessibility_conditions=[item.value for item in AccessibilityCondition],
+        accessibility_verdicts=[item.value for item in AccessibilityVerdict],
+        accessibility_results=[item.value for item in AccessibilityResult],
     )
 
 

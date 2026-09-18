@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 
 from app.core.constants import (
     INSPECTION_CHECK_ITEMS,
+    AccessibilityCondition,
+    AccessibilityFacility,
     IssueCategory,
     IssueSeverity,
     IssueStatus,
@@ -16,10 +18,11 @@ from app.core.constants import (
     Shift,
 )
 from app.models import Restroom
+from app.schemas.accessibility import AccessibilityCheckCreate, AccessibilityItemIn
 from app.schemas.inspection import InspectionCreate, InspectionItem
 from app.schemas.issue import IssueCreate, IssueStatusUpdate
 from app.schemas.restroom import RestroomCreate
-from app.services import inspection_service, issue_service, restroom_service
+from app.services import accessibility_service, inspection_service, issue_service, restroom_service
 
 RANDOM_SEED = 20240913
 
@@ -190,7 +193,55 @@ def seed_database(db: Session, *, reset: bool = False) -> int:
         created += 1
         _advance_issue(db, issue.id, age_days, rng)
 
+    created += _seed_accessibility(db, restrooms, rng, now)
+
     return created
+
+
+def _seed_accessibility(
+    db: Session, restrooms: list[Restroom], rng: random.Random, now: datetime
+) -> int:
+    """生成无障碍专项检查演示数据，不符合项由服务层自动生成整改事项。"""
+    created_issues = 0
+    for room in restrooms:
+        if room.status == RestroomStatus.CLOSED:
+            continue
+        for _ in range(rng.randint(1, 3)):
+            day = now - timedelta(days=rng.randint(0, 13))
+            items: list[AccessibilityItemIn] = []
+            for facility in AccessibilityFacility:
+                # 台账标注有无障碍设施的公厕基本配置齐全，偶发破损；
+                # 未标注的公厕存在设施缺失，用于演示自动建单。
+                missing_rate = 0.04 if room.has_accessible else 0.35
+                configured = rng.random() >= missing_rate
+                condition = None
+                if configured:
+                    roll = rng.random()
+                    if roll < 0.84:
+                        condition = AccessibilityCondition.GOOD
+                    elif roll < 0.96:
+                        condition = AccessibilityCondition.MINOR
+                    else:
+                        condition = AccessibilityCondition.SEVERE
+                items.append(
+                    AccessibilityItemIn(facility=facility, configured=configured, condition=condition)
+                )
+            check = accessibility_service.create_check(
+                db,
+                AccessibilityCheckCreate(
+                    restroom_id=room.id,
+                    inspector=rng.choice(INSPECTORS),
+                    check_time=day.replace(
+                        hour=rng.choice([9, 11, 15, 17]), minute=rng.choice([10, 30, 45])
+                    ),
+                    items=items,
+                ),
+            )
+            for issue in check.issues:
+                created_issues += 1
+                age_days = (now - check.check_time).days
+                _advance_issue(db, issue.id, age_days, rng)
+    return created_issues
 
 
 def _advance_issue(db: Session, issue_id: int, age_days: int, rng: random.Random) -> None:

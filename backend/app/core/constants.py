@@ -97,3 +97,54 @@ OPEN_ISSUE_STATUSES: list[str] = [
 
 # 单检查项低于该分数视为不合格项
 INSPECTION_ITEM_PROBLEM_THRESHOLD = 6
+
+
+class AccessibilityFacility(StrEnum):
+    """无障碍专项检查的四类必检设施。"""
+
+    HANDRAIL = "扶手"
+    RAMP = "坡道"
+    TACTILE = "盲道"
+    STALL = "专用间"
+
+
+class AccessibilityCondition(StrEnum):
+    """设施完好状态（已配置时填写）。"""
+
+    GOOD = "完好"
+    MINOR = "轻微破损"
+    SEVERE = "严重损坏"
+
+
+# 未配置设施的完好状态统一记录为该值
+ACCESSIBILITY_NOT_CONFIGURED = "未配置"
+
+
+class AccessibilityVerdict(StrEnum):
+    """单项设施按检查标准得出的判定结论。"""
+
+    COMPLIANT = "符合"
+    PARTIAL = "部分符合"
+    FAILED = "不符合"
+
+
+class AccessibilityResult(StrEnum):
+    """一次专项检查的整体结论。"""
+
+    PASS = "达标"
+    PARTIAL = "部分达标"
+    FAIL = "不达标"
+
+
+# 检查标准要求的必检设施，登记时必须全部覆盖
+ACCESSIBILITY_REQUIRED_FACILITIES: list[str] = [item.value for item in AccessibilityFacility]
+
+# 判定取值：符合计 1、部分符合计 0.5、不符合计 0，用于折算达标率
+ACCESSIBILITY_VERDICT_SCORES: dict[str, float] = {
+    AccessibilityVerdict.COMPLIANT: 1.0,
+    AccessibilityVerdict.PARTIAL: 0.5,
+    AccessibilityVerdict.FAILED: 0.0,
+}
+
+# 无障碍问题自动建单时的默认整改期限（天）
+ACCESSIBILITY_ISSUE_DEADLINE_DAYS = 7
